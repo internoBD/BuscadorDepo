@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador Dinámico de Ubicaciones</title>
+    <!-- Librería JsBarcode para el código de barras -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h2 { color: #1a73e8; margin-bottom: 20px; }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        input {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 60%;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background-color: #1557b0; }
+        
+        .error-msg {
+            display: none;
+            color: white;
+            background-color: #d93025;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        .result-card {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            font-size: 14px;
+        }
+        td { font-size: 18px; font-weight: bold; }
+        
+        .barcode-container {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Buscador de Ubicaciones Generales</h2>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Buscar código (Ej: 2-7-1-5)" onkeypress="handleKeyPress(event)">
+            <button onclick="buscar()">Buscar</button>
+        </div>
+
+        <div id="error" class="error-msg">Formato incorrecto. Ingresa un código con 4 números separados por guiones (ej: 2-7-1-5).</div>
+
+        <div id="result" class="result-card">
+            <!-- Tabla con la información extraída dinámicamente -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>PASILLO</th>
+                        <th>ESTANTERÍA</th>
+                        <th>NIVEL</th>
+                        <th>TORRE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="valPasillo">-</td>
+                        <td id="valEstanteria">-</td>
+                        <td id="valNivel">-</td>
+                        <td id="valTorre">-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="barcode-container">
+                <svg id="barcode"></svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function buscar() {
+            // Obtenemos el valor y quitamos espacios accidentales
+            let inputVal = document.getElementById('searchInput').value.trim().replace(/\s+/g, '');
+            
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+
+            // Ocultar resultados previos
+            resultDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+
+            if (inputVal === "") return;
+
+            // Dividir el código ingresado por los guiones
+            const partes = inputVal.split('-');
+
+            // Verificar que tenga exactamente 4 partes (Pasillo, Estantería, Nivel, Torre)
+            if (partes.length === 4 && partes.every(part => !isNaN(part) && part !== "")) {
+                
+                // Mostrar la tarjeta de resultados
+                resultDiv.style.display = 'block';
+                
+                // Llenar la tabla dinámicamente con los números extraídos del propio código
+                document.getElementById('valPasillo').textContent = partes[0];
+                document.getElementById('valEstanteria').textContent = partes[1];
+                document.getElementById('valNivel').textContent = partes[2];
+                document.getElementById('valTorre').textContent = partes[3];
+                
+                // Generar el código de barras
+                JsBarcode("#barcode", inputVal, {
+                    format: "CODE128",
+                    lineColor: "#000",
+                    width: 3,
+                    height: 100,
+                    displayValue: true, 
+                    fontSize: 20
+                });
+            } else {
+                // Si el usuario escribe algo que no tiene formato "numero-numero-numero-numero", da error
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Ejecutar búsqueda al presionar "Enter"
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                buscar();
+            }
+        }
+    </script>
+</body>
+</html>
