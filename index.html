@@ -59,9 +59,9 @@
             transition: border-color 0.3s;
         }
         
-        /* Contenedor Adaptado para el Nuevo Logo con Letras Negras */
+        /* Contenedor del Logo B+D */
         .logo-header {
-            background-color: #ffffff; /* Fondo blanco para resaltar las letras negras */
+            background-color: #ffffff;
             border: 2px solid #e0e0e0;
             padding: 10px 22px;
             border-radius: 30px;
@@ -75,12 +75,12 @@
         .logo-circle {
             width: 24px;
             height: 24px;
-            background-color: #ff1d25; /* Círculo rojo */
+            background-color: #ff1d25;
             border-radius: 50%;
             display: inline-block;
         }
         .logo-text {
-            color: #000000; /* Letras negras del nuevo logo */
+            color: #000000;
             font-size: 28px;
             font-weight: 900;
             letter-spacing: 2px;
@@ -154,13 +154,14 @@
             padding: 14px;
         }
 
+        /* Buscador */
         .search-box {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             justify-content: center;
         }
-        input {
+        input[type="text"] {
             padding: 10px;
             font-size: 14px;
             border: 2px solid #000000;
@@ -169,15 +170,37 @@
             color: #000000;
             text-align: center;
         }
-        input:focus { outline: none; border-color: var(--primary-color); }
+        input[type="text"]:focus { outline: none; border-color: var(--primary-color); }
         
+        .list-mode-box {
+            background-color: #f8f9fa;
+            border: 1px solid #d0d0d0;
+            border-radius: 20px;
+            padding: 8px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+        .list-mode-box input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #cc0000;
+        }
+
         .error-msg {
             display: none;
             color: #ffffff;
             background-color: #cc0000;
             padding: 10px;
             border-radius: 8px;
-            margin-top: 15px;
+            margin-top: 10px;
+            margin-bottom: 15px;
             font-size: 14px;
         }
 
@@ -193,14 +216,26 @@
         .warning-msg strong {
             color: var(--primary-color); 
         }
-        
-        .result-card {
-            display: none;
-            margin-top: 20px;
-            padding: 15px;
+
+        .item-codigo-lista {
             border: 2px solid #000000;
             border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
             background-color: #ffffff;
+        }
+
+        .btn-clear-list {
+            background-color: #000000 !important;
+            border-color: #000000 !important;
+            color: #ffffff !important;
+            font-size: 12px;
+            padding: 8px 16px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .btn-clear-list:hover {
+            background-color: #333333 !important;
         }
 
         .grid-modelos {
@@ -227,7 +262,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             background-color: #ffffff;
         }
         th, td {
@@ -247,11 +282,10 @@
         
         .barcode-container {
             background: #ffffff;
-            padding: 15px;
+            padding: 10px;
             border: 2px dashed #000000;
             border-radius: 8px;
             display: inline-block;
-            margin-top: 15px;
         }
 
         .titulo-modelo {
@@ -332,32 +366,21 @@
                 <input type="text" id="searchInput" placeholder="Ej: 2-7-1-5" onkeypress="handleKeyPress(event)">
                 <button onclick="buscarUbicacion()">Buscar</button>
             </div>
+
+            <label class="list-mode-box">
+                <input type="checkbox" id="chkModoLista" onchange="toggleModoLista()">
+                <span>Modo Lista (Múltiples Códigos)</span>
+            </label>
+
             <div id="error" class="error-msg"></div>
 
-            <div id="resultUbicacion" class="result-card">
-                <div class="warning-msg">
-                    ✅ <strong>¡Formato válido!</strong> Verifica que esta ubicación exista físicamente en tu almacén. Si todo está correcto, puedes utilizar el código de barras con confianza.
-                </div>
+            <button id="btnClearList" class="btn-clear-list" onclick="limpiarListaUbicaciones()">🗑️ Limpiar Lista</button>
 
-                <div class="tabla-container">
-                    <table>
-                        <thead>
-                            <tr><th>PASILLO</th><th>ESTANTERÍA</th><th>NIVEL</th><th>TORRE</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td id="valPasillo">-</td>
-                                <td id="valEstanteria">-</td>
-                                <td id="valNivel">-</td>
-                                <td id="valTorre">-</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="barcode-container">
-                    <svg id="barcode"></svg>
-                </div>
+            <div id="warningUbicacion" class="warning-msg" style="display: none;">
+                ✅ <strong>¡Formato válido!</strong> Verifica que la ubicación exista físicamente en tu almacén.
             </div>
+
+            <div id="contenedorListaUbicaciones"></div>
         </div>
 
         <!-- PANTALLA 3: CATEGORÍAS -->
@@ -430,16 +453,13 @@
     </div>
 
     <script>
-        // ==========================================
-        // LÍMITES MÁXIMOS DE TU ALMACÉN
-        // ==========================================
         const LÍMITE_PASILLOS = 50;
         const LÍMITE_ESTANTERIAS = 50;
         const LÍMITE_NIVELES = 15;
         const LÍMITE_TORRES = 15;
 
         // ==========================================
-        // BASE DE DATOS ACTUALIZADA CON TUS CAMBIOS
+        // BASE DE DATOS ACTUALIZADA CON TUS NUEVOS DATOS
         // ==========================================
         const datosLotes = [
             { modelo: "BIG BOLD", lote: "BT24-01005", fecha: "nov-23" },
@@ -450,12 +470,14 @@
             { modelo: "GEO", lote: "BT24-11014", fecha: "dic-24" },
             { modelo: "GEO", lote: "BT25-04003", fecha: "abr-25" },
             { modelo: "GEO", lote: "BT25-12015", fecha: "ene-26" },
-            { modelo: "GEO", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "GEO", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "GEO", lote: "BT26-02008", fecha: "ene-26" },
             
             { modelo: "CUBE", lote: "BT24-11014", fecha: "dic-24" },
             { modelo: "CUBE", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "CUBE", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "CUBE", lote: "BT25-08001", fecha: "abr-25" },
             { modelo: "CUBE", lote: "BT26-04012", fecha: "abr-26" },
+            { modelo: "CUBE", lote: "BT26-02008", fecha: "ene-26" },
             
             { modelo: "MAX", lote: "E4604-24-0901", fecha: "nov-23" },
             { modelo: "MAX", lote: "E4604-24-1202", fecha: "dic-24" },
@@ -475,31 +497,31 @@
             { modelo: "BLUE BAN", lote: "BT24-01005", fecha: "nov-23" },
             { modelo: "BLUE BAN", lote: "BT24-11014", fecha: "dic-24" },
             { modelo: "BLUE BAN", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "BLUE BAN", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "BLUE BAN", lote: "BT25-08001", fecha: "abr-25" },
             
             { modelo: "LOOP", lote: "BT24-01005", fecha: "nov-23" },
             { modelo: "LOOP", lote: "BT24-11014", fecha: "dic-24" },
             { modelo: "LOOP", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "LOOP", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "LOOP", lote: "BT25-08001", fecha: "abr-25" },
             
             { modelo: "ICON", lote: "BT24-11014", fecha: "dic-21" },
             { modelo: "ICON", lote: "BT24-01005", fecha: "nov-23" },
             { modelo: "ICON", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "ICON", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "ICON", lote: "BT25-08001", fecha: "abr-25" },
             
             { modelo: "HOP", lote: "BT24-07002", fecha: "jun-24" },
             { modelo: "HOP", lote: "BT24-09005", fecha: "jun-24" },
             { modelo: "HOP", lote: "BT25-04003", fecha: "mar-25" },
-            { modelo: "HOP", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "HOP", lote: "BT25-08001", fecha: "abr-25" },
             
             { modelo: "ROUND", lote: "BT24-09005", fecha: "jun-24" },
             { modelo: "ROUND", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "ROUND", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "ROUND", lote: "BT25-08001", fecha: "abr-25" },
             
             { modelo: "SQUARE", lote: "BT24-04055", fecha: "nov-23" },
             { modelo: "SQUARE", lote: "BT24-09005", fecha: "jun-24" },
             { modelo: "SQUARE", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "SQUARE", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "SQUARE", lote: "BT25-08001", fecha: "abr-25" },
             
             { modelo: "CAT EYE XL", lote: "E4604-24-0701", fecha: "jul-24" },
             { modelo: "CAT EYE XL", lote: "E4604-24-0901", fecha: "jul-24" },
@@ -525,26 +547,25 @@
             { modelo: "COPENHAGUEN", lote: "BT26-06007-1", fecha: "jun-26" },
             
             { modelo: "KIDS", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "KIDS", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "KIDS", lote: "BT25-08001", fecha: "ago-25" },
             
-            { modelo: "SQ2", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "SQ2", lote: "BT25-08001", fecha: "abr-25" },
             { modelo: "SQ2", lote: "BT26-04012", fecha: "abr-26" },
             
             { modelo: "SMART ROUND", lote: "E404-25-0808", fecha: "abr-25" },
             { modelo: "SMART ROUND", lote: "E4604-25-1219", fecha: "dic-25" },
             
             { modelo: "FIT", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "FIT", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "FIT", lote: "BT25-08001", fecha: "abr-25" },
             { modelo: "FIT", lote: "BT26-04012", fecha: "abr-26" },
             
             { modelo: "BLOCK", lote: "E4604-25-1219", fecha: "dic-25" },
             { modelo: "BLOCK", lote: "E4604-26-0410", fecha: "abr-26" },
             
             { modelo: "SMARTSUN", lote: "E404-25-0808", fecha: "ago-25" },
-            { modelo: "SMARTSUN", lote: "BT25-08001", fecha: "may-25" }
+            { modelo: "SMARTSUN", lote: "BT25-08001", fecha: "ago-25" }
         ];
 
-        // ORDEN DE MODELOS (INCLUYE SMARTSUN AL FINAL DE SMART)
         const ordenCategorias = {
             "SMART": ["SQ2", "SMART ROUND", "FIT", "BLOCK", "SMARTSUN"],
             "READERS": ["BIG BOLD", "GEO", "PILOT", "MAX", "DOT", "ICON", "CUBE", "LOOP", "BLUE BAN"],
@@ -552,6 +573,7 @@
         };
 
         let categoriaActual = "";
+        let contadorBarcode = 0;
 
         function cambiarPantalla(idPantalla) {
             if (idPantalla === 'pantallaInicio' || idPantalla === 'pantallaUbicaciones' || idPantalla === 'pantallaCategorias') {
@@ -637,12 +659,25 @@
             cambiarPantalla('pantallaDetalleLotes');
         }
 
+        function toggleModoLista() {
+            limpiarListaUbicaciones();
+        }
+
+        function limpiarListaUbicaciones() {
+            document.getElementById('contenedorListaUbicaciones').innerHTML = '';
+            document.getElementById('warningUbicacion').style.display = 'none';
+            document.getElementById('btnClearList').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+        }
+
         function buscarUbicacion() {
             let inputVal = document.getElementById('searchInput').value.trim().replace(/\s+/g, '');
-            const resultDiv = document.getElementById('resultUbicacion');
             const errorDiv = document.getElementById('error');
+            const esModoLista = document.getElementById('chkModoLista').checked;
+            const contenedor = document.getElementById('contenedorListaUbicaciones');
+            const warningDiv = document.getElementById('warningUbicacion');
+            const btnClear = document.getElementById('btnClearList');
 
-            resultDiv.style.display = 'none';
             errorDiv.style.display = 'none';
 
             if (inputVal === "") return;
@@ -667,15 +702,49 @@
                     return; 
                 }
 
-                resultDiv.style.display = 'block';
-                document.getElementById('valPasillo').textContent = partes[0];
-                document.getElementById('valEstanteria').textContent = partes[1];
-                document.getElementById('valNivel').textContent = partes[2];
-                document.getElementById('valTorre').textContent = partes[3];
-                
-                JsBarcode("#barcode", inputVal, {
+                warningDiv.style.display = 'block';
+
+                if (!esModoLista) {
+                    contenedor.innerHTML = '';
+                    btnClear.style.display = 'none';
+                } else {
+                    btnClear.style.display = 'inline-block';
+                }
+
+                contadorBarcode++;
+                const svgId = "barcode_" + contadorBarcode;
+
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'item-codigo-lista';
+                cardDiv.innerHTML = `
+                    <div class="tabla-container">
+                        <table>
+                            <thead>
+                                <tr><th>PASILLO</th><th>ESTANTERÍA</th><th>NIVEL</th><th>TORRE</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>${partes[0]}</td>
+                                    <td>${partes[1]}</td>
+                                    <td>${partes[2]}</td>
+                                    <td>${partes[3]}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="barcode-container">
+                        <svg id="${svgId}"></svg>
+                    </div>
+                `;
+
+                contenedor.appendChild(cardDiv);
+
+                JsBarcode("#" + svgId, inputVal, {
                     format: "CODE128", lineColor: "#000", width: 3, height: 100, displayValue: true, fontSize: 20
                 });
+
+                document.getElementById('searchInput').value = '';
+
             } else {
                 errorDiv.textContent = "Formato incorrecto. Usa 4 números separados por guiones (ej: 2-7-1-5).";
                 errorDiv.style.display = 'block';
