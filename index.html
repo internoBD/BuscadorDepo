@@ -59,7 +59,7 @@
             transition: border-color 0.3s;
         }
         
-        /* Contenedor del Logo B+D */
+        /* Contenedor Adaptado para el Nuevo Logo con Letras Negras */
         .logo-header {
             background-color: #ffffff;
             border: 2px solid #e0e0e0;
@@ -459,7 +459,7 @@
         const LÍMITE_TORRES = 15;
 
         // ==========================================
-        // BASE DE DATOS ACTUALIZADA CON TUS NUEVOS DATOS
+        // BASE DE DATOS EXACTA SEGÚN TU ÚLTIMA LISTA
         // ==========================================
         const datosLotes = [
             { modelo: "BIG BOLD", lote: "BT24-01005", fecha: "nov-23" },
@@ -467,17 +467,18 @@
             { modelo: "BIG BOLD", lote: "BT25-04003", fecha: "abr-25" },
             { modelo: "BIG BOLD", lote: "BT25-12015", fecha: "ene-26" },
             
+            { modelo: "GEO", lote: "BT26-02008", fecha: "ene-26" },
             { modelo: "GEO", lote: "BT24-11014", fecha: "dic-24" },
             { modelo: "GEO", lote: "BT25-04003", fecha: "abr-25" },
             { modelo: "GEO", lote: "BT25-12015", fecha: "ene-26" },
-            { modelo: "GEO", lote: "BT25-08001", fecha: "abr-25" },
-            { modelo: "GEO", lote: "BT26-02008", fecha: "ene-26" },
+            { modelo: "GEO", lote: "BT25-08001", fecha: "may-25" },
             
+            { modelo: "CUBE", lote: "BT26-02008", fecha: "ene-26" },
+            { modelo: "CUBE", lote: "BT24-01005", fecha: "nov-23" },
             { modelo: "CUBE", lote: "BT24-11014", fecha: "dic-24" },
             { modelo: "CUBE", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "CUBE", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "CUBE", lote: "BT25-08001", fecha: "may-25" },
             { modelo: "CUBE", lote: "BT26-04012", fecha: "abr-26" },
-            { modelo: "CUBE", lote: "BT26-02008", fecha: "ene-26" },
             
             { modelo: "MAX", lote: "E4604-24-0901", fecha: "nov-23" },
             { modelo: "MAX", lote: "E4604-24-1202", fecha: "dic-24" },
@@ -497,31 +498,31 @@
             { modelo: "BLUE BAN", lote: "BT24-01005", fecha: "nov-23" },
             { modelo: "BLUE BAN", lote: "BT24-11014", fecha: "dic-24" },
             { modelo: "BLUE BAN", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "BLUE BAN", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "BLUE BAN", lote: "BT25-08001", fecha: "may-25" },
             
             { modelo: "LOOP", lote: "BT24-01005", fecha: "nov-23" },
             { modelo: "LOOP", lote: "BT24-11014", fecha: "dic-24" },
             { modelo: "LOOP", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "LOOP", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "LOOP", lote: "BT25-08001", fecha: "may-25" },
             
             { modelo: "ICON", lote: "BT24-11014", fecha: "dic-21" },
             { modelo: "ICON", lote: "BT24-01005", fecha: "nov-23" },
             { modelo: "ICON", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "ICON", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "ICON", lote: "BT25-08001", fecha: "may-25" },
             
             { modelo: "HOP", lote: "BT24-07002", fecha: "jun-24" },
             { modelo: "HOP", lote: "BT24-09005", fecha: "jun-24" },
             { modelo: "HOP", lote: "BT25-04003", fecha: "mar-25" },
-            { modelo: "HOP", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "HOP", lote: "BT25-08001", fecha: "may-25" },
             
             { modelo: "ROUND", lote: "BT24-09005", fecha: "jun-24" },
             { modelo: "ROUND", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "ROUND", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "ROUND", lote: "BT25-08001", fecha: "may-25" },
             
             { modelo: "SQUARE", lote: "BT24-04055", fecha: "nov-23" },
             { modelo: "SQUARE", lote: "BT24-09005", fecha: "jun-24" },
             { modelo: "SQUARE", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "SQUARE", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "SQUARE", lote: "BT25-08001", fecha: "may-25" },
             
             { modelo: "CAT EYE XL", lote: "E4604-24-0701", fecha: "jul-24" },
             { modelo: "CAT EYE XL", lote: "E4604-24-0901", fecha: "jul-24" },
@@ -547,23 +548,23 @@
             { modelo: "COPENHAGUEN", lote: "BT26-06007-1", fecha: "jun-26" },
             
             { modelo: "KIDS", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "KIDS", lote: "BT25-08001", fecha: "ago-25" },
+            { modelo: "KIDS", lote: "BT25-08001", fecha: "may-25" },
             
-            { modelo: "SQ2", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "SQ2", lote: "BT25-08001", fecha: "may-25" },
             { modelo: "SQ2", lote: "BT26-04012", fecha: "abr-26" },
             
             { modelo: "SMART ROUND", lote: "E404-25-0808", fecha: "abr-25" },
             { modelo: "SMART ROUND", lote: "E4604-25-1219", fecha: "dic-25" },
             
             { modelo: "FIT", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "FIT", lote: "BT25-08001", fecha: "abr-25" },
+            { modelo: "FIT", lote: "BT25-08001", fecha: "may-25" },
             { modelo: "FIT", lote: "BT26-04012", fecha: "abr-26" },
             
             { modelo: "BLOCK", lote: "E4604-25-1219", fecha: "dic-25" },
             { modelo: "BLOCK", lote: "E4604-26-0410", fecha: "abr-26" },
             
             { modelo: "SMARTSUN", lote: "E404-25-0808", fecha: "ago-25" },
-            { modelo: "SMARTSUN", lote: "BT25-08001", fecha: "ago-25" }
+            { modelo: "SMARTSUN", lote: "BT25-08001", fecha: "may-25" }
         ];
 
         const ordenCategorias = {
