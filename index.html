@@ -59,7 +59,6 @@
             transition: border-color 0.3s;
         }
         
-        /* Contenedor Adaptado para el Nuevo Logo con Letras Negras */
         .logo-header {
             background-color: #ffffff;
             border: 2px solid #e0e0e0;
@@ -140,6 +139,17 @@
         .btn-cat-sol { background-color: #ffcc00 !important; border-color: #ffcc00 !important; color: #000000 !important; }
         .btn-cat-sol:hover { background-color: #e6b800 !important; border-color: #e6b800 !important; }
 
+        .btn-ver-todos {
+            background-color: #000000 !important;
+            border-color: #000000 !important;
+            color: #ffffff !important;
+            margin-top: 15px;
+            width: 80%;
+        }
+        .btn-ver-todos:hover {
+            background-color: #333333 !important;
+        }
+
         .pantalla { display: none; }
         .pantalla.activa { display: block; }
 
@@ -154,7 +164,6 @@
             padding: 14px;
         }
 
-        /* Buscador */
         .search-box {
             display: flex;
             gap: 10px;
@@ -256,13 +265,19 @@
         }
 
         .tabla-container {
-            max-width: 350px; 
+            max-width: 450px; 
             margin: 0 auto; 
+        }
+        .tabla-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #000000;
+            border-radius: 8px;
+            margin-bottom: 15px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
             background-color: #ffffff;
         }
         th, td {
@@ -274,12 +289,66 @@
             background-color: #000000; 
             color: #ffffff; 
             font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         td { 
-            font-size: 14px; 
+            font-size: 13px; 
             font-weight: bold; 
         }
         
+        /* Solo el encabezado WMS lleva fondo verde fluorescente */
+        .th-wms-verde {
+            background-color: #00ff00 !important;
+            color: #000000 !important;
+        }
+
+        /* Estilos para alertar coincidencias de mes en lotes */
+        .fila-alerta-fecha td {
+            background-color: #fff3e0;
+        }
+        .fila-alerta-fecha td.celda-fecha {
+            color: #bf360c;
+            box-shadow: inset 4px 0 0 #f57c00;
+        }
+        
+        /* Avisos Naranjas de Alerta */
+        .aviso-colision {
+            background-color: #fff3e0;
+            border-left: 5px solid #f57c00;
+            color: #7a2e00;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 13px;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        .aviso-colision-dinamico {
+            display: none;
+        }
+        .aviso-colision-dinamico.visible {
+            display: block;
+        }
+
+        .toggle-alertas {
+            font-size: 12.5px;
+            font-weight: bold;
+            color: #7a2e00;
+            background-color: #fff3e0;
+            border: 2px solid #f57c00;
+            border-radius: 20px;
+            padding: 6px 14px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: inline-block;
+            user-select: none;
+        }
+        .toggle-alertas.activo {
+            background-color: #f57c00;
+            color: #ffffff;
+        }
+
         .barcode-container {
             background: #ffffff;
             padding: 10px;
@@ -303,7 +372,7 @@
             font-size: 14px;
             font-style: italic;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: none; 
         }
 
@@ -399,6 +468,7 @@
                 <button onclick="seleccionarCategoria('SMART')" class="btn-cat-smart">SMART</button>
                 <button onclick="seleccionarCategoria('READERS')" class="btn-cat-readers">READERS</button>
                 <button onclick="seleccionarCategoria('SOL')" class="btn-cat-sol">SOL</button>
+                <button onclick="mostrarTodosLosLotes()" class="btn-ver-todos">📋 VER TODOS LOS LOTES</button>
             </div>
         </div>
 
@@ -417,7 +487,7 @@
             <div id="gridModelos" class="grid-modelos"></div>
         </div>
 
-        <!-- PANTALLA 5: DETALLE DE LOTES -->
+        <!-- PANTALLA 5: DETALLE DE LOTES POR MODELO -->
         <div id="pantallaDetalleLotes" class="pantalla">
             <div class="logo-header">
                 <span class="logo-circle"></span>
@@ -431,12 +501,18 @@
             <h2 id="tituloModeloSeleccionado" class="titulo-modelo">Modelo</h2>
             <div id="leyendaPolarizados" class="leyenda">* Los polarizados están incluidos *</div>
             
+            <!-- AVISO 1: Permanente obligatorio -->
+            <div class="aviso-colision">⚠️ Atención: Revisa bien la fecha antes de registrar el lote en el WMS.</div>
+
+            <!-- AVISO 2: Específico si hay fechas coincidentes en el modelo -->
+            <div id="avisoColisionDinamico" class="aviso-colision aviso-colision-dinamico">⚠️ Este modelo tiene lotes con fechas parecidas. Confirma bien el lote antes de hacer el registro.</div>
+            
             <div class="tabla-container">
                 <table>
                     <thead>
                         <tr>
                             <th>LOTE</th>
-                            <th>FECHA</th>
+                            <th class="th-wms-verde">WMS</th>
                         </tr>
                     </thead>
                     <tbody id="tablaLotesBody">
@@ -450,6 +526,44 @@
             </div>
         </div>
 
+        <!-- PANTALLA 6: RESUMEN GENERAL DE TODOS LOS LOTES -->
+        <div id="pantallaTodosLosLotes" class="pantalla">
+            <div class="logo-header">
+                <span class="logo-circle"></span>
+                <span class="logo-text">B+D</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn-back" onclick="cambiarPantalla('pantallaCategorias')">⬅ Volver</button>
+                <button class="btn-home" onclick="cambiarPantalla('pantallaInicio')">Inicio</button>
+            </div>
+
+            <h2>Resumen de Lotes</h2>
+            
+            <div class="search-box">
+                <input type="text" id="filtroTablaTodos" placeholder="Filtrar modelo, lote, WMS..." onkeyup="filtrarTodosLosLotes()">
+            </div>
+
+            <div id="avisoColisionGeneral" class="aviso-colision" style="display: none;">⚠️ Atención: Revisa bien la fecha antes de registrar el lote en el WMS. Los resaltados en naranja tienen fechas cercanas.</div>
+
+            <div class="toggle-alertas" id="toggleAlertas" onclick="toggleSoloAlertas()">⚠️ Ver solo lotes en alerta</div>
+
+            <div class="tabla-container">
+                <div class="tabla-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>MODELO</th>
+                                <th>LOTE</th>
+                                <th>WMS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaTodosLotesBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -459,113 +573,163 @@
         const LÍMITE_TORRES = 15;
 
         // ==========================================
-        // BASE DE DATOS EXACTA SEGÚN TU ÚLTIMA LISTA
+        // BASE DE DATOS COMPLETA Y ACTUALIZADA
         // ==========================================
         const datosLotes = [
-            { modelo: "BIG BOLD", lote: "BT24-01005", fecha: "nov-23" },
-            { modelo: "BIG BOLD", lote: "BT24-09005", fecha: "ago-24" },
-            { modelo: "BIG BOLD", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "BIG BOLD", lote: "BT25-12015", fecha: "ene-26" },
+            { modelo: "BIG BOLD", lote: "BT25-12015", fecha: "12/1/2026" },
+            { modelo: "BIG BOLD", lote: "BT24-01005", fecha: "31/1/2024" },
+            { modelo: "BIG BOLD", lote: "BT24-09005", fecha: "15/10/2024" },
+            { modelo: "BIG BOLD", lote: "BT25-04003", fecha: "7/5/2024" },
             
-            { modelo: "GEO", lote: "BT26-02008", fecha: "ene-26" },
-            { modelo: "GEO", lote: "BT24-11014", fecha: "dic-24" },
-            { modelo: "GEO", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "GEO", lote: "BT25-12015", fecha: "ene-26" },
-            { modelo: "GEO", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "GEO", lote: "BT26-02008", fecha: "13/2/2026" },
+            { modelo: "GEO", lote: "BT25-12015", fecha: "12/1/2026" },
+            { modelo: "GEO", lote: "BT25-08001", fecha: "1/10/2025" },
+            { modelo: "GEO", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "GEO", lote: "BT24-11014", fecha: "20/12/2024" },
             
-            { modelo: "CUBE", lote: "BT26-02008", fecha: "ene-26" },
-            { modelo: "CUBE", lote: "BT24-01005", fecha: "nov-23" },
-            { modelo: "CUBE", lote: "BT24-11014", fecha: "dic-24" },
-            { modelo: "CUBE", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "CUBE", lote: "BT25-08001", fecha: "may-25" },
-            { modelo: "CUBE", lote: "BT26-04012", fecha: "abr-26" },
+            { modelo: "CUBE", lote: "BT26-02008", fecha: "13/2/2026" },
+            { modelo: "CUBE", lote: "BT26-04012", fecha: "17/4/2026" },
+            { modelo: "CUBE", lote: "BT25-08001", fecha: "1/10/2025" },
+            { modelo: "CUBE", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "CUBE", lote: "BT24-11014", fecha: "20/12/2024" },
+            { modelo: "CUBE", lote: "BT24-01005", fecha: "31/1/2024" },
             
-            { modelo: "MAX", lote: "E4604-24-0901", fecha: "nov-23" },
-            { modelo: "MAX", lote: "E4604-24-1202", fecha: "dic-24" },
-            { modelo: "MAX", lote: "E4604-25-0424", fecha: "abr-25" },
-            { modelo: "MAX", lote: "E404-25-0808", fecha: "abr-25" },
-            { modelo: "MAX", lote: "E404-26-0813", fecha: "may-26" },
+            { modelo: "MAX", lote: "E4604-24-0901", fecha: "15/11/2024" },
+            { modelo: "MAX", lote: "E4604-24-1202", fecha: "3/12/2024" },
+            { modelo: "MAX", lote: "E4604-25-0424", fecha: "7/5/2025" },
+            { modelo: "MAX", lote: "E4604-25-0808", fecha: "17/10/2025" },
+            { modelo: "MAX", lote: "E4604-26-0813", fecha: "6/8/2026" },
             
-            { modelo: "DOT", lote: "E4604-24-0901", fecha: "sept-24" },
-            { modelo: "DOT", lote: "E4604-24-1202", fecha: "dic-24" },
-            { modelo: "DOT", lote: "E404-25-0424", fecha: "abr-25" },
-            { modelo: "DOT", lote: "E404-25-0808", fecha: "abr-25" },
-            { modelo: "DOT", lote: "E404-26-0813", fecha: "may-26" },
+            { modelo: "DOT", lote: "E4604-24-0901", fecha: "15/11/2024" },
+            { modelo: "DOT", lote: "E4604-24-1202", fecha: "3/12/2024" },
+            { modelo: "DOT", lote: "E4604-25-0424", fecha: "7/5/2025" },
+            { modelo: "DOT", lote: "E4604-25-0808", fecha: "17/10/2025" },
+            { modelo: "DOT", lote: "E4604-26-0813", fecha: "6/8/2026" },
             
-            { modelo: "PILOT", lote: "BT26-06007-1", fecha: "jun-26" },
+            { modelo: "PILOT", lote: "BT26-06007-1", fecha: "12/8/2026" },
             
-            { modelo: "BLUE BAN", lote: "BT23-11001", fecha: "nov-23" },
-            { modelo: "BLUE BAN", lote: "BT24-01005", fecha: "nov-23" },
-            { modelo: "BLUE BAN", lote: "BT24-11014", fecha: "dic-24" },
-            { modelo: "BLUE BAN", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "BLUE BAN", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "BLUE BAN", lote: "BT23-11001", fecha: "20/11/2023" },
+            { modelo: "BLUE BAN", lote: "BT24-01005", fecha: "31/1/2024" },
+            { modelo: "BLUE BAN", lote: "BT24-11014", fecha: "20/12/2024" },
+            { modelo: "BLUE BAN", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "BLUE BAN", lote: "BT25-08001", fecha: "1/10/2025" },
             
-            { modelo: "LOOP", lote: "BT24-01005", fecha: "nov-23" },
-            { modelo: "LOOP", lote: "BT24-11014", fecha: "dic-24" },
-            { modelo: "LOOP", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "LOOP", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "LOOP", lote: "BT24-01005", fecha: "31/1/2024" },
+            { modelo: "LOOP", lote: "BT24-11014", fecha: "20/12/2024" },
+            { modelo: "LOOP", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "LOOP", lote: "BT25-08001", fecha: "1/10/2025" },
             
-            { modelo: "ICON", lote: "BT24-11014", fecha: "dic-21" },
-            { modelo: "ICON", lote: "BT24-01005", fecha: "nov-23" },
-            { modelo: "ICON", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "ICON", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "ICON", lote: "BT24-11014", fecha: "20/12/2024" },
+            { modelo: "ICON", lote: "BT24-01005", fecha: "31/1/2024" },
+            { modelo: "ICON", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "ICON", lote: "BT25-08001", fecha: "1/10/2025" },
             
-            { modelo: "HOP", lote: "BT24-07002", fecha: "jun-24" },
-            { modelo: "HOP", lote: "BT24-09005", fecha: "jun-24" },
-            { modelo: "HOP", lote: "BT25-04003", fecha: "mar-25" },
-            { modelo: "HOP", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "HOP", lote: "BT24-07002", fecha: "17/7/2024" },
+            { modelo: "HOP", lote: "BT24-09005", fecha: "15/10/2024" },
+            { modelo: "HOP", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "HOP", lote: "BT25-08001", fecha: "1/10/2025" },
             
-            { modelo: "ROUND", lote: "BT24-09005", fecha: "jun-24" },
-            { modelo: "ROUND", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "ROUND", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "ROUND", lote: "BT24-09005", fecha: "15/10/2024" },
+            { modelo: "ROUND", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "ROUND", lote: "BT25-08001", fecha: "1/10/2025" },
             
-            { modelo: "SQUARE", lote: "BT24-04055", fecha: "nov-23" },
-            { modelo: "SQUARE", lote: "BT24-09005", fecha: "jun-24" },
-            { modelo: "SQUARE", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "SQUARE", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "SQUARE", lote: "BT24-04055", fecha: "18/4/2024" },
+            { modelo: "SQUARE", lote: "BT24-09005", fecha: "15/10/2024" },
+            { modelo: "SQUARE", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "SQUARE", lote: "BT25-08001", fecha: "1/10/2025" },
             
-            { modelo: "CAT EYE XL", lote: "E4604-24-0701", fecha: "jul-24" },
-            { modelo: "CAT EYE XL", lote: "E4604-24-0901", fecha: "jul-24" },
-            { modelo: "CAT EYE XL", lote: "E4604-25-0424", fecha: "abr-25" },
-            { modelo: "CAT EYE XL", lote: "E404-25-0808", fecha: "abr-25" },
+            { modelo: "CAT EYE XL", lote: "E4604-24-0701", fecha: "6/8/2024" },
+            { modelo: "CAT EYE XL", lote: "E4604-24-0901", fecha: "15/11/2024" },
+            { modelo: "CAT EYE XL", lote: "E4604-25-0424", fecha: "7/5/2025" },
+            { modelo: "CAT EYE XL", lote: "E4604-25-0808", fecha: "17/10/2025" },
             
-            { modelo: "ROUND XL", lote: "E4604-24-0701", fecha: "jul-24" },
-            { modelo: "ROUND XL", lote: "E4604-24-0901", fecha: "jul-24" },
-            { modelo: "ROUND XL", lote: "E404-25-0424", fecha: "abr-25" },
-            { modelo: "ROUND XL", lote: "E404-25-0808", fecha: "abr-25" },
+            { modelo: "ROUND XL", lote: "E4604-24-0701", fecha: "6/8/2024" },
+            { modelo: "ROUND XL", lote: "E4604-24-0901", fecha: "15/11/2024" },
+            { modelo: "ROUND XL", lote: "E4604-25-0424", fecha: "7/5/2025" },
+            { modelo: "ROUND XL", lote: "E4604-25-0808", fecha: "17/10/2025" },
             
-            { modelo: "SQUARE XL", lote: "E4604-24-0201", fecha: "nov-23" },
-            { modelo: "SQUARE XL", lote: "E4604-24-0701", fecha: "jul-24" },
-            { modelo: "SQUARE XL", lote: "E4604-24-0901", fecha: "jul-24" },
-            { modelo: "SQUARE XL", lote: "E404-25-0424", fecha: "abr-25" },
-            { modelo: "SQUARE XL", lote: "E404-25-0808", fecha: "abr-25" },
+            { modelo: "SQUARE XL", lote: "E4604-24-0201", fecha: "14/5/2024" },
+            { modelo: "SQUARE XL", lote: "E4604-24-0701", fecha: "6/8/2024" },
+            { modelo: "SQUARE XL", lote: "E4604-24-0901", fecha: "15/11/2024" },
+            { modelo: "SQUARE XL", lote: "E4604-25-0424", fecha: "7/5/2025" },
+            { modelo: "SQUARE XL", lote: "E4604-25-0808", fecha: "17/10/2025" },
             
-            { modelo: "AVIATOR XL", lote: "BT25-12006", fecha: "ene-26" },
-            { modelo: "AVIATOR XL", lote: "BT26-02008", fecha: "ene-26" },
+            { modelo: "AVIATOR XL", lote: "BT25-12006", fecha: "15/12/2025" },
+            { modelo: "AVIATOR XL", lote: "BT26-02008", fecha: "13/2/2026" },
             
-            { modelo: "COPENHAGUEN", lote: "BT25-04003", fecha: "mar-25" },
-            { modelo: "COPENHAGUEN", lote: "BT25-06002", fecha: "jun-25" },
-            { modelo: "COPENHAGUEN", lote: "BT26-06007-1", fecha: "jun-26" },
+            { modelo: "COPENHAGUEN", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "COPENHAGUEN", lote: "BT25-06002", fecha: "9/6/2025" },
+            { modelo: "COPENHAGUEN", lote: "BT26-06007-1", fecha: "12/8/2026" },
             
-            { modelo: "KIDS", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "KIDS", lote: "BT25-08001", fecha: "may-25" },
+            { modelo: "KIDS", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "KIDS", lote: "BT25-08001", fecha: "1/10/2025" },
+
+            // Lotes Vieja Serie KIDS
+            { modelo: "KIDS", lote: "2", fecha: "1/1/2022" },
+            { modelo: "KIDS", lote: "3", fecha: "1/2/2022" },
+            { modelo: "KIDS", lote: "21", fecha: "1/3/2022" },
+            { modelo: "KIDS", lote: "1005", fecha: "1/4/2022" },
+            { modelo: "KIDS", lote: "10001", fecha: "1/5/2022" },
+            { modelo: "KIDS", lote: "6", fecha: "1/6/2022" },
+            { modelo: "KIDS", lote: "820", fecha: "1/7/2022" },
+            { modelo: "KIDS", lote: "1", fecha: "1/8/2022" },
+            { modelo: "KIDS", lote: "8001 (viejo)", fecha: "1/9/2022" },
             
-            { modelo: "SQ2", lote: "BT25-08001", fecha: "may-25" },
-            { modelo: "SQ2", lote: "BT26-04012", fecha: "abr-26" },
+            { modelo: "SQ2", lote: "BT25-08001", fecha: "1/10/2025" },
+            { modelo: "SQ2", lote: "BT26-04012", fecha: "17/4/2026" },
             
-            { modelo: "SMART ROUND", lote: "E404-25-0808", fecha: "abr-25" },
-            { modelo: "SMART ROUND", lote: "E4604-25-1219", fecha: "dic-25" },
+            { modelo: "SMART ROUND", lote: "E4604-25-0808", fecha: "17/10/2025" },
+            { modelo: "SMART ROUND", lote: "E4604-25-1219", fecha: "2/1/2026" },
             
-            { modelo: "FIT", lote: "BT25-04003", fecha: "abr-25" },
-            { modelo: "FIT", lote: "BT25-08001", fecha: "may-25" },
-            { modelo: "FIT", lote: "BT26-04012", fecha: "abr-26" },
+            { modelo: "FIT", lote: "BT25-04003", fecha: "7/5/2024" },
+            { modelo: "FIT", lote: "BT25-08001", fecha: "1/10/2025" },
+            { modelo: "FIT", lote: "BT26-04012", fecha: "17/4/2026" },
             
-            { modelo: "BLOCK", lote: "E4604-25-1219", fecha: "dic-25" },
-            { modelo: "BLOCK", lote: "E4604-26-0410", fecha: "abr-26" },
+            { modelo: "BLOCK", lote: "E4604-25-1219", fecha: "2/1/2026" },
+            { modelo: "BLOCK", lote: "E4604-26-0410", fecha: "31/7/2026" },
             
-            { modelo: "SMARTSUN", lote: "E404-25-0808", fecha: "ago-25" },
-            { modelo: "SMARTSUN", lote: "BT25-08001", fecha: "may-25" }
+            { modelo: "SMARTSUN", lote: "E4604-25-0808", fecha: "17/10/2025" },
+            { modelo: "SMARTSUN", lote: "BT25-08001", fecha: "1/10/2025" }
         ];
+
+        const MESES_ABREV = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+        function formatearFecha(fechaStr) {
+            const [dd, mm, aaaa] = fechaStr.split('/');
+            return dd + '-' + MESES_ABREV[parseInt(mm, 10) - 1] + '-' + aaaa.slice(-2);
+        }
+
+        function mesKey(fechaStr) {
+            return fechaStr.split('/')[1];
+        }
+
+        const lotesEnAlertaPorModelo = {};
+        (function calcularAlertas() {
+            const grupos = {};
+            datosLotes.forEach(item => {
+                const key = item.modelo + '|' + mesKey(item.fecha);
+                if (!grupos[key]) grupos[key] = { modelo: item.modelo, lotes: new Set() };
+                grupos[key].lotes.add(item.lote);
+            });
+            Object.values(grupos).forEach(g => {
+                if (g.lotes.size > 1) {
+                    if (!lotesEnAlertaPorModelo[g.modelo]) lotesEnAlertaPorModelo[g.modelo] = new Set();
+                    g.lotes.forEach(l => lotesEnAlertaPorModelo[g.modelo].add(l));
+                }
+            });
+        })();
+
+        function enAlerta(modelo, lote) {
+            return !!(lotesEnAlertaPorModelo[modelo] && lotesEnAlertaPorModelo[modelo].has(lote));
+        }
+
+        function celdaFechaHTML(item) {
+            const texto = formatearFecha(item.fecha);
+            if (enAlerta(item.modelo, item.lote)) {
+                return `<td class="celda-fecha">${texto} ⚠️</td>`;
+            }
+            return `<td>${texto}</td>`;
+        }
 
         const ordenCategorias = {
             "SMART": ["SQ2", "SMART ROUND", "FIT", "BLOCK", "SMARTSUN"],
@@ -577,7 +741,7 @@
         let contadorBarcode = 0;
 
         function cambiarPantalla(idPantalla) {
-            if (idPantalla === 'pantallaInicio' || idPantalla === 'pantallaUbicaciones' || idPantalla === 'pantallaCategorias') {
+            if (idPantalla === 'pantallaInicio' || idPantalla === 'pantallaUbicaciones' || idPantalla === 'pantallaCategorias' || idPantalla === 'pantallaTodosLosLotes') {
                 document.body.className = '';
             }
 
@@ -623,12 +787,17 @@
             const tbody = document.getElementById('tablaLotesBody');
             tbody.innerHTML = ''; 
 
+            const avisoColisionDinamico = document.getElementById('avisoColisionDinamico');
+            const tieneColision = lotesDelModelo.some(dato => enAlerta(dato.modelo, dato.lote));
+            avisoColisionDinamico.classList.toggle('visible', tieneColision);
+
             if (lotesDelModelo.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="2">Sin lotes registrados</td></tr>';
             } else {
                 lotesDelModelo.forEach(dato => {
                     const fila = document.createElement('tr');
-                    fila.innerHTML = `<td>${dato.lote}</td><td>${dato.fecha}</td>`;
+                    if (enAlerta(dato.modelo, dato.lote)) fila.classList.add('fila-alerta-fecha');
+                    fila.innerHTML = `<td>${dato.lote}</td>${celdaFechaHTML(dato)}`;
                     tbody.appendChild(fila);
                 });
             }
@@ -660,6 +829,61 @@
             cambiarPantalla('pantallaDetalleLotes');
         }
 
+        // ==========================================
+        // PANTALLA RESUMEN DE TODOS LOS LOTES
+        // ==========================================
+        function mostrarTodosLosLotes() {
+            document.getElementById('filtroTablaTodos').value = '';
+            soloAlertas = false;
+            document.getElementById('toggleAlertas').classList.remove('activo');
+            renderizarTablaTodos(datosLotes);
+            cambiarPantalla('pantallaTodosLosLotes');
+        }
+
+        let soloAlertas = false;
+
+        function toggleSoloAlertas() {
+            soloAlertas = !soloAlertas;
+            document.getElementById('toggleAlertas').classList.toggle('activo', soloAlertas);
+            filtrarTodosLosLotes();
+        }
+
+        function renderizarTablaTodos(lista) {
+            const tbody = document.getElementById('tablaTodosLotesBody');
+            tbody.innerHTML = '';
+
+            const hayAlertaVisible = lista.some(item => enAlerta(item.modelo, item.lote));
+            document.getElementById('avisoColisionGeneral').style.display = hayAlertaVisible ? 'block' : 'none';
+
+            if (lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3">No se encontraron lotes</td></tr>';
+                return;
+            }
+
+            lista.forEach(item => {
+                const fila = document.createElement('tr');
+                if (enAlerta(item.modelo, item.lote)) fila.classList.add('fila-alerta-fecha');
+                fila.innerHTML = `<td>${item.modelo}</td><td>${item.lote}</td>${celdaFechaHTML(item)}`;
+                tbody.appendChild(fila);
+            });
+        }
+
+        function filtrarTodosLosLotes() {
+            const query = document.getElementById('filtroTablaTodos').value.toLowerCase().trim();
+            let filtrados = datosLotes.filter(item => 
+                item.modelo.toLowerCase().includes(query) ||
+                item.lote.toLowerCase().includes(query) ||
+                formatearFecha(item.fecha).toLowerCase().includes(query)
+            );
+            if (soloAlertas) {
+                filtrados = filtrados.filter(item => enAlerta(item.modelo, item.lote));
+            }
+            renderizarTablaTodos(filtrados);
+        }
+
+        // ==========================================
+        // BUSCADOR & MODO LISTA DE UBICACIONES
+        // ==========================================
         function toggleModoLista() {
             limpiarListaUbicaciones();
         }
